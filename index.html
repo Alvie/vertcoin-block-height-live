@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+    <title>Live Vertcoin Block Height</title>
+    <style>
+        html {
+            background-color:  #048657;
+        }
+        body {
+            max-width: 64em;
+            margin: 0 auto;
+            padding: 2em;
+        }
+        * {
+            padding: 0;
+            margin: 0;
+            font-weight: bold;
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2 {
+            color: #fff;
+            text-align: center;
+            margin: 1em;
+        }
+        .blockDetails {
+            display: grid;
+            grid-gap: 2em;
+            margin: 2em 0;
+            grid-template-rows: 1fr 1fr 1fr 1fr;
+        }
+        .largeSpan {
+            font-size: 4em;
+        }
+        .countdownSpan {
+            font-size: 1.5em;
+            margin-bottom: 1em;
+        }
+        .asterisk {
+            font-size: 0.8em;
+        }
+        article {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff;
+            padding: 1em;
+            border-radius: 10px;
+        }
+        .celebration {
+            text-align: center;
+            background-color: rgb(0, 102, 255);
+            color: #fff;
+            padding: 1em;
+            border-radius: 10px;
+        }
+        .explained {
+            line-height: 1.6;
+            margin: 2em 0;
+        }
+        .explained article {
+            margin: 2em 0;
+        }
+        @media only screen and (min-width: 768px) {
+            .blockDetails {
+                grid-template-rows: 1fr 1fr;
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+    <link href="./fireworks.css" rel="stylesheet">
+</head>
+<body>
+    <h1>Live Vertcoin Block Height</h1>
+    <h2>Live Vertcoin Block Height Count and Rewards</h2>
+    <section class="blockDetails">
+        <article>
+            <h3>Block Height</h3>
+            <span class="largeSpan" id="blockHeight">0</span>
+        </article>
+        <article>
+            <h3>Next Halving Block</h3>
+            <span class="largeSpan" id="nextHalvingBlock">0</span>
+        </article>
+        <article>
+            <h3>Blocks Until Next Halving</h3>
+            <span class="largeSpan" id="blocksUntilNextHalving">0</span>
+        </article>
+        <article>
+            <h3>Current Block Reward</h3>
+            <span class="largeSpan" id="blockReward">0</span>
+        </article>
+    </section>
+    <section class="halvingCountdown">
+        <article>
+            <h3>Halving Countdown</h3>
+            <h4>Time remaining to next halving*</h4>
+            <span class="countdownSpan" id="countdownHalvingTimeRemaining"></span>
+            <h4>Date of next halving*</h4>
+            <span class="countdownSpan" id="countdownHalvingDate"></span>
+            <p class="asterisk">*approximate, based on average block time of 2 minutes 30 seconds</p>
+        </article>
+    </section>
+    <section class="celebration" id="celebration" style="display: none;">
+        <span id="celebrateHalving"></span>
+        <div id="fireworks">
+            <div class="before"></div>
+            <div class="after"></div>
+        </div>
+    </section>
+    <h2>Halving FAQs</h2>
+    <section class="explained">
+        <article>
+            <h3>What is a halving and why does it occur?</h3>
+            <p>A halving is a regular event that occurs in many cryptocurrencies. When a halving event occurs, the block rewards that miners receive are halved.
+                Initially, Vertcoin had a block reward of 50 VTC for each block mined. This block reward is to incentivise people to secure the network by mining.
+                Vertcoin has a halving event every 840,000 blocks (roughly every 4 years), where this block reward halves to reduce the rate of inflation.
+                Eventually after many halvings, there will be no new coins as the circulating supply will reach the fixed supply of 84,000,000 VTC.
+                Once this happens, Vertcoin will no longer be inflationary.
+            </p>
+        </article>
+        <article>
+            <h3>How does a halving affect me?</h3>
+            <p>If you are a holder of the coin, you and your existing coins will not be affected. If you are a miner, you may notice that your rewards earned are lower than usual.
+            This usually eventually balances itself, as some miners will leave due to the lower profitability, causing the network difficulty to lower; 
+            this could mean it is easier for remaining miners to gain a larger relative portion of the halved block reward. After some time, mining should return to a new normal. 
+            </p>
+        </article>
+    </section>
+    <script src="https://insight.vertcoin.org/socket.io/socket.io.js"></script>
+    <script>
+        const eventToListenTo = 'block';
+        const room = 'inv';
+        const initialCoinbaseReward = 50;
+        const numberOfBlocksBetweenHalvings = 840000;
+
+        // Credit: https://stackoverflow.com/a/52387803
+        function secondsToTimeRemainingString(seconds) {
+            seconds = Number(seconds);
+            let d = Math.floor(seconds / (3600*24));
+            let h = Math.floor(seconds % (3600*24) / 3600);
+            let m = Math.floor(seconds % 3600 / 60);
+            let s = Math.floor(seconds % 60);
+
+            let dDisplay = d > 0 ? d + (d == 1 ? " day, " : " days, ") : "";
+            let hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
+            let mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
+            let sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+            return (dDisplay + hDisplay + mDisplay + sDisplay).replace(/,\s*$/, "");
+        }
+
+        function celebrateHalving(lastHalvingBlock, blockReward) {
+            const celebrationSection = document.querySelector("#celebration");
+            const celebrateHalvingSpan = document.querySelector("#celebrateHalving");
+            const fireworks = document.querySelector("#fireworks");
+            fireworks.classList.add("pyro");
+            celebrationSection.style.display = "block";
+            celebrateHalvingSpan.textContent = `Vertcoin block reward halving has occured with block #${lastHalvingBlock}! The block reward has halved from ${blockReward * 2} VTC to ${blockReward} VTC`;
+        }
+
+        function populateDetails(blockHeight) {
+            const numberOfHalvings = Math.floor(blockHeight / numberOfBlocksBetweenHalvings);
+            const lastHalvingBlock = numberOfHalvings * numberOfBlocksBetweenHalvings;
+
+            const nextHalvingBlock = (numberOfHalvings + 1) * numberOfBlocksBetweenHalvings;
+            const blocksUntilNextHalving = nextHalvingBlock - blockHeight;
+            const blockReward = initialCoinbaseReward * (0.5 ** numberOfHalvings);
+
+            if (blockHeight === lastHalvingBlock || blockHeight - lastHalvingBlock <= 5) {
+                celebrateHalving(lastHalvingBlock, blockReward);
+            }
+
+            const blockHeightSpan = document.querySelector("#blockHeight");
+            const nextHalvingBlockSpan = document.querySelector("#nextHalvingBlock");
+            const blocksUntilNextHalvingSpan = document.querySelector("#blocksUntilNextHalving");
+            const countdownHalvingTimeRemainingSpan = document.querySelector("#countdownHalvingTimeRemaining");
+            const countdownHalvingDateSpan = document.querySelector("#countdownHalvingDate");
+            const blockRewardSpan = document.querySelector("#blockReward");
+
+            blockHeightSpan.textContent = blockHeight;
+            nextHalvingBlockSpan.textContent = nextHalvingBlock;
+            blocksUntilNextHalvingSpan.textContent = blocksUntilNextHalving;
+            const secondsToNextHalving = blocksUntilNextHalving * 150;
+            countdownHalvingTimeRemainingSpan.textContent = secondsToTimeRemainingString(secondsToNextHalving);
+            const halvingDate = Date.now() + ((blocksUntilNextHalving * 150) * 1000);
+            countdownHalvingDateSpan.textContent = new Date(halvingDate).toLocaleString();
+            blockRewardSpan.textContent = blockReward;
+        }
+
+        async function populateBlockDetails() {
+            const response = await fetch("https://insight.vertcoin.org/insight-vtc-api/sync");
+            const syncData = await response.json();
+            const blockHeight = syncData.blockChainHeight;
+            populateDetails(blockHeight);
+        }
+
+        const socket = io("https://insight.vertcoin.org/");
+        socket.on('connect', function () {
+            socket.emit('subscribe', room);
+        });
+        socket.on(eventToListenTo, async function () {
+            await populateBlockDetails();
+        });
+
+        window.addEventListener('load', async () => { populateBlockDetails() });
+    </script>
+</body>
+</html>
