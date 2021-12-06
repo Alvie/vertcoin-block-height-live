@@ -193,10 +193,18 @@
             blockRewardSpan.textContent = blockReward;
         }
 
-        async function populateBlockDetails() {
-            const response = await fetch("https://insight.vertcoin.org/insight-vtc-api/sync");
-            const syncData = await response.json();
-            const blockHeight = syncData.blockChainHeight;
+        async function populateBlockDetails(blockHash = null) {
+            let blockHeight = 0;
+            if (blockHash === null) {
+                const response = await fetch("https://insight.vertcoin.org/insight-vtc-api/sync");
+                const syncData = await response.json();
+                blockHeight = syncData.blockChainHeight;
+            } else {
+                const response = await fetch(`https://insight.vertcoin.org/insight-vtc-api/block/${blockHash}`);
+                const blockData = await response.json();
+                blockHeight = blockData.height;
+            }
+
             populateDetails(blockHeight);
         }
 
@@ -204,8 +212,8 @@
         socket.on('connect', function () {
             socket.emit('subscribe', room);
         });
-        socket.on(eventToListenTo, async function () {
-            await populateBlockDetails();
+        socket.on(eventToListenTo, async function (data) {
+            await populateBlockDetails(data);
         });
 
         window.addEventListener('load', async () => { populateBlockDetails() });
