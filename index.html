@@ -57,6 +57,7 @@
             background-color: rgb(0, 102, 255);
             color: #fff;
             padding: 1em;
+            margin-bottom: 2em;
             border-radius: 10px;
         }
         .explained {
@@ -97,6 +98,13 @@
             <span class="largeSpan" id="blockReward">0</span>
         </article>
     </section>
+    <section class="celebration" id="celebration" style="display: none;">
+        <span id="celebrateHalving"></span>
+        <div id="fireworks">
+            <div class="before"></div>
+            <div class="after"></div>
+        </div>
+    </section>
     <section class="halvingCountdown">
         <article>
             <h3>Halving Countdown</h3>
@@ -106,13 +114,6 @@
             <span class="countdownSpan" id="countdownHalvingDate"></span>
             <p class="asterisk">*approximate, based on average block time of 2 minutes 30 seconds</p>
         </article>
-    </section>
-    <section class="celebration" id="celebration" style="display: none;">
-        <span id="celebrateHalving"></span>
-        <div id="fireworks">
-            <div class="before"></div>
-            <div class="after"></div>
-        </div>
     </section>
     <h2>Halving FAQs</h2>
     <section class="explained">
@@ -139,6 +140,7 @@
         const room = 'inv';
         const initialCoinbaseReward = 50;
         const numberOfBlocksBetweenHalvings = 840000;
+        let hasPlayedFireworks = false;
 
         // Credit: https://stackoverflow.com/a/52387803
         function secondsToTimeRemainingString(seconds) {
@@ -159,7 +161,15 @@
             const celebrationSection = document.querySelector("#celebration");
             const celebrateHalvingSpan = document.querySelector("#celebrateHalving");
             const fireworks = document.querySelector("#fireworks");
-            fireworks.classList.add("pyro");
+            // Play fireworks for 20 seconds
+            if (!hasPlayedFireworks) {
+                hasPlayedFireworks = true;
+                fireworks.classList.add("pyro");
+                setTimeout(function(){
+                    fireworks.classList.remove("pyro");
+                }, 20000);
+            }
+            // Show celebration section
             celebrationSection.style.display = "block";
             celebrateHalvingSpan.textContent = `Vertcoin block reward halving has occured with block #${lastHalvingBlock}! The block reward has halved from ${blockReward * 2} VTC to ${blockReward} VTC`;
         }
