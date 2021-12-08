@@ -182,7 +182,7 @@
             const blocksUntilNextHalving = nextHalvingBlock - blockHeight;
             const blockReward = initialCoinbaseReward * (0.5 ** numberOfHalvings);
 
-            if (blockHeight === lastHalvingBlock || blockHeight - lastHalvingBlock <= 5) {
+            if (blockHeight === lastHalvingBlock || blockHeight - lastHalvingBlock <= 576) {
                 celebrateHalving(lastHalvingBlock, blockReward);
             }
 
